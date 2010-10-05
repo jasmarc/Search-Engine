@@ -1,0 +1,130 @@
+\documentclass[12pt]{article}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\lstset{
+language=Ruby,                  % choose the language of the code
+basicstyle=\footnotesize,       % the size of the fonts that are used for the code
+numbers=left,                   % where to put the line-numbers
+numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+numbersep=5pt,                  % how far the line-numbers are from the code
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+frame=single,	                  % adds a frame around the code
+tabsize=2,	                    % sets default tabsize to 2 spaces
+captionpos=b,                   % sets the caption-position to bottom
+breaklines=true,                % sets automatic line breaking
+breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+}
+
+\title{INFO 4300: HW I} 
+\author{Jason Marcell} 
+\date{September 19th, 2010}
+
+\begin{document} 
+\maketitle 
+\newpage
+\section{Introduction} % (fold)
+\label{sec:introduction}
+The object of this assignment was to write a program called invert that takes raw text, creates an inverted file system, and provides a simple user interface for testing. A corpus of 30 documents from Reuters and a stop list were provided.
+% section introduction (end)
+\section{Implementation} % (fold)
+\label{sec:implementation}
+\subsection{Data-Structures} % (fold)
+\label{sub:datastructures}
+Every word from every document from the corpus is placed into a hashtable where the key is the word and the value is yet another hash table. The key of the second hash table is the document name and the value of the second hash table is a dynamic array of integers representing the locations in the document where instances of the word were found.
+\lstset{caption=A small sample of the word listing index. The word ``aboard'' was found twice in three documents each.}
+\begin{lstlisting}
+["aaron", {"./test/file25.txt"=>[626]}]
+["abandoning", {"./test/file22.txt"=>[2594]}]
+["ability",
+ {"./test/file27.txt"=>[3901],
+  "./test/file23.txt"=>[2363],
+  "./test/file13.txt"=>[1896]}]
+["able",
+ {"./test/file27.txt"=>[2496],
+  "./test/file17.txt"=>[2177],
+  "./test/file28.txt"=>[864, 3367],
+  "./test/file11.txt"=>[1728, 2984],
+  "./test/file15.txt"=>[3238],
+  "./test/file24.txt"=>[195]}]
+["aboard",
+ {"./test/file09.txt"=>[1952, 2144],
+  "./test/file10.txt"=>[517, 1759],
+  "./test/file03.txt"=>[538, 1570]}]
+\end{lstlisting}
+% subsection datastructures (end)
+\pagebreak
+\subsection{Project Layout} % (fold)
+\label{sub:project_layout}
+\begin{itemize}
+  \item \texttt{invert.rb} - the main file that you run.
+  \item \texttt{search\_engine.rb} - this is where my objects are defined
+    \begin{itemize}
+      \item \texttt{class SearchEngine} - the main object
+      \begin{itemize}
+        \item \texttt{initialize} - constructor
+        \item \texttt{print\_word\_list} - produces a textual output of the first n wordlist entries for the benefit of the grader
+        \item \texttt{query} - takes a single word and produces a query
+        \item \texttt{query\_multiple\_words} - takes an array of words and produces a query
+        \item \texttt{add} - adds words to the wordlist along with which document they came from and where in the document they were seen
+        \item \texttt{word\_does\_not\_belong} - boolean method to determine if the word should go into the wordlist (i.e. should not be null, empty, or in the stoplist)
+        \item \texttt{df} - document frequency
+        \item \texttt{idf} - inverse document frequency
+        \item \texttt{tf} - term frequency
+        \item \texttt{w} - log frequency weight
+        \item \texttt{tfidf} - term frequency inverse document frequency
+        \item \texttt{get\_word\_in\_context} - given a word and a document, this gets a little snippet of the word with some surrounding context
+        \item \texttt{find\_documents\_with\_all\_words} - given a bunch of words, this finds all of the documents that all of the words are in
+      \end{itemize}
+      \item \texttt{class String} - adding some new functionality to the base \texttt{String} class
+      \begin{itemize}
+        \item \texttt{split\_with\_index} - given a string, we split it into a 2D array where each element is a (token, index) pair, e.g. ``Hello world'' becomes \texttt{[[`Hello', 0], [`world', 6]]}
+        \item \texttt{stem!} - very basic stemming, e.g. strip out garbage and non-alphanumerics and lowercase everything
+      \end{itemize}
+    \end{itemize}
+  \item \texttt{search\_engine.test.rb} - unit tests. May be run like \texttt{ruby search\_engine.test.rb} to run all tests or \texttt{ruby search\_engine.test.rb --name <test\_name\_of\_test>} to run a single test
+  \item \texttt{report} - folder containing documents used to generate this report
+  \item \texttt{test} - the corpus data provided by the instructor from Reuters
+  \item \texttt{word\_list.txt} - output of word list
+\end{itemize}
+% subsection project_layout (end)
+% section implementation (end)
+\section{Instructions for Running} % (fold)
+\label{sec:instructions_for_running}
+This implementation was developed and tested on a Macbook running Mac OS X 10.6.4 running ruby 1.8.7 (2009-06-12 patchlevel 174) [universal-darwin10.0], but no special libraries were used. Therefore this implementation should be compatible with most installations of Ruby.
+
+To run the search engine, simply type \texttt{ruby invert.rb} from the local directory where \texttt{invert.rb} is located. At this point, the search engine should be waiting for queries. Notice in the example below, we typed \texttt{hello} and we see a query results telling us that it was found once in \texttt{file03.txt}. Then we type \texttt{foo} and we're told that this term was not found at all. Next we type \texttt{nasa hello} to test searching on multiple terms. There was only one document where both of those terms appeared: \texttt{file03.txt}. The query \texttt{nasa project}, on the other hand, yields three documents. If we simply hit enter, we're given instructions to enter a query or type \texttt{ZZZ}. If we type \texttt{ZZZ} this tells the search engine that we're done and the program ends.
+\pagebreak
+\lstset{caption=Sample interaction with the search engine.}
+\begin{lstlisting}
+$ ruby invert.rb 
+hello
+idf = 1.477
+Appeared in ./test/file03.txt 1 times at these location(s): 577
+tf = 1, tf.idf = 1.477
+	... ional Space Station Hello World My name i ...
+
+foo
+Query returned to results.
+nasa hello
+./test/file03.txt 2.098
+nasa project
+./test/file10.txt 1.195
+./test/file01.txt 1.195
+./test/file03.txt 1.195
+
+Enter a query or type 'ZZZ' to end.
+ZZZ
+$   
+\end{lstlisting}
+% section instructions_for_running (end)
+\section{References} % (fold)
+\label{sec:references}
+\begin{itemize}
+  \item Formulas were used as per definition from the class website: \url{http://www.infosci.cornell.edu/Courses/info4300/2010fa/index.html}
+  \item I collaborated with Karan Kurani for this project.
+\end{itemize}
+% section references (end)
+\end{document}
